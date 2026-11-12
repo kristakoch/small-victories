@@ -1,0 +1,45 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+
+version: '3'
+
+env:
+  BASE_FOLDER: "{{.HOME}}/bg-go"
+  WATCH_FOLDER: "/Users/krista/Library/Mobile Documents/com~apple~CloudDocs/Documents/notes/misc/writing/stories"
+  GOAL_WORDS: 1000
+  OMIT_FILES: "think.md"
+
+tasks:
+  run: 
+    - go run main.go
+  install-bg-mac: 
+    - mkdir -p {{.BASE_FOLDER}}
+    - go build -o {{.BASE_FOLDER}}/smallvictories 
+    - touch ~/Library/LaunchAgents/com.user.smallvictories.plist
+    - |
+        cat <<EOF > ~/Library/LaunchAgents/com.user.smallvictories.plist
+        <?xml version="1.0" encoding="UTF-8"?>
+        <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+        <plist version="1.0">
+        <dict>
+            <key>Label</key>
+            <string>com.user.smallvictories</string>
+            <key>ProgramArguments</key>
+            <array>
+                <string>{{.BASE_FOLDER}}/smallvictories</string>
+            </array>
+            <key>WorkingDirectory</key>
+            <string>{{.BASE_FOLDER}}</string>
+            <key>RunAtLoad</key>
+            <true/>
+            <key>KeepAlive</key>
+            <true/>
+            <key>StandardOutPath</key>
+            <string>/tmp/smallvictories.out.log</string>
+            <key>StandardErrorPath</key>
+            <string>/tmp/smallvictories.err.log</string>
+        </dict>
+        </plist>
+        EOF
+    - launchctl load ~/Library/LaunchAgents/com.user.smallvictories.plist
+  tail-bg-mac:
+    - tail -f /tmp/smallvictories.out.log /tmp/smallvictories.err.log
