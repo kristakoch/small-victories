@@ -1,6 +1,6 @@
 # small-victories
 
-<img src="screenshot.png" alt="Small Victories notification" width="200">
+<img src="screenshot.png" alt="Small Victories notification" width="300">
 
 Watches the top-level files in a directory for word count changes and sends a MacOS notification celebrating reaching a word count goal for a day.
 
