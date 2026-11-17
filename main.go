@@ -13,6 +13,14 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
+/*
+
+Achievements
+- Reached word goal for the day
+- Reached new record in words written
+
+*/
+
 var (
 	stateFile     = "state.json"
 	dayDateFormat = "2006-01-02"
@@ -46,7 +54,7 @@ func (cfg config) omit(fn string) bool {
 func main() {
 	var err error
 
-	// Edit these.
+	// Edit these before installing the app.
 	var cfg = config{
 		watchFolder: "/Users/krista/Library/Mobile Documents/com~apple~CloudDocs/Documents/notes/misc/writing/stories",
 		goalWords:   1000,
@@ -120,9 +128,11 @@ func run(
 }
 
 type state struct {
-	LastCelebratedOn string               `json:"lastCelebratedOn"` //
+	LastCelebratedOn string               `json:"lastCelebratedOn"` // last celebrated
 	CelebratedOn     []string             `json:"celebratedOn"`     // basic history of goals reached
 	Files            map[string]fileState `json:"files"`            // state of all files in the folder
+	Record           int                  `json:"record"`           // all time record
+	RecordSetOn      string               `json:"recordSetOn"`      // record date
 }
 
 type fileState struct {
@@ -136,11 +146,6 @@ func checkFiles(
 	cfg config,
 ) error {
 	var err error
-
-	if isToday(s.LastCelebratedOn) {
-		log.Printf("user has already celebrated reaching goal of %d words for %s, exiting", cfg.goalWords, s.LastCelebratedOn)
-		return nil
-	}
 
 	if err = updateState(s, cfg); nil != err {
 		return err
@@ -158,12 +163,35 @@ func checkFiles(
 
 	log.Printf("user has written %d words today\n", wordsToday)
 
-	if wordsToday >= cfg.goalWords {
-		if err = celebrate(cfg); nil != err {
+	alreadyCelebratedGoal := isToday(s.LastCelebratedOn)
+
+	// Celebrate a goal.
+	if (wordsToday >= cfg.goalWords) && !alreadyCelebratedGoal {
+		if err = celebrateGoal(cfg.goalWords); nil != err {
 			return err
 		}
 		s.LastCelebratedOn = time.Now().Format(dayDateFormat)
 		s.CelebratedOn = append(s.CelebratedOn, s.LastCelebratedOn)
+	}
+
+	alreadyCelebratedRecord := isToday(s.RecordSetOn)
+
+	// Celebrate a record.
+	if wordsToday >= int(s.Record) {
+		if !alreadyCelebratedRecord {
+			if err = celebrateRecord(wordsToday); nil != err {
+				return err
+			}
+			s.RecordSetOn = time.Now().Format(dayDateFormat)
+		}
+
+		s.Record = wordsToday
+	}
+
+	// Since the app uses net amounts, if the record was set today but
+	// the current number of words is lower than the record, bump it down.
+	if (wordsToday < s.Record) && alreadyCelebratedRecord {
+		s.Record = wordsToday
 	}
 
 	if err = storeState(s); nil != err {
@@ -290,12 +318,28 @@ func countWords(fn string) (int, error) {
 	return len(words), nil
 }
 
-func celebrate(
-	cfg config,
+func celebrateGoal(
+	goal int,
 ) error {
 	var err error
 
-	script := fmt.Sprintf(`display notification "Great job writing %d words 🤘"  with title "NEW ACHIEVEMENT" sound name "Glass"`, cfg.goalWords)
+	script := fmt.Sprintf(`display notification "Great job writing %d words today 🤘"  with title "NEW ACHIEVEMENT" sound name "Glass"`, goal)
+
+	cmd := exec.Command("osascript", "-e", script)
+
+	if err = cmd.Run(); nil != err {
+		return err
+	}
+
+	return nil
+}
+
+func celebrateRecord(
+	newRecord int,
+) error {
+	var err error
+
+	script := fmt.Sprintf(`display notification "You set a new record of %d words today 🍾"  with title "NEW ACHIEVEMENT" sound name "Glass"`, newRecord)
 
 	cmd := exec.Command("osascript", "-e", script)
 
