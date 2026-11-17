@@ -7,7 +7,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -47,10 +46,12 @@ func (cfg config) omit(fn string) bool {
 func main() {
 	var err error
 
-	var cfg config
-	cfg.watchFolder = os.Getenv("WATCH_FOLDER")
-	cfg.goalWords, _ = strconv.Atoi(os.Getenv("GOAL_WORDS"))
-	cfg.omitFiles = strings.Split(os.Getenv("OMIT_FILES"), ",")
+	// Edit these.
+	var cfg = config{
+		watchFolder: "/Users/krista/Library/Mobile Documents/com~apple~CloudDocs/Documents/notes/misc/writing/stories",
+		goalWords:   1000,
+		omitFiles:   []string{"think.md"},
+	}
 
 	if err = cfg.validate(); nil != err {
 		log.Fatal(err)

@@ -4,9 +4,6 @@ version: '3'
 
 env:
   BASE_FOLDER: "{{.HOME}}/bg-go"
-  WATCH_FOLDER: "/Users/krista/Library/Mobile Documents/com~apple~CloudDocs/Documents/notes/misc/writing/stories"
-  GOAL_WORDS: 1000
-  OMIT_FILES: "think.md"
 
 tasks:
   run: 
@@ -40,6 +37,8 @@ tasks:
         </dict>
         </plist>
         EOF
-    - launchctl load ~/Library/LaunchAgents/com.user.smallvictories.plist
+    - |
+        launchctl bootout "gui/$(id -u)/com.user.smallvictories" 2>/dev/null || true
+        launchctl bootstrap "gui/$(id -u)" "$HOME/Library/LaunchAgents/com.user.smallvictories.plist"
   tail-bg-mac:
     - tail -f /tmp/smallvictories.out.log /tmp/smallvictories.err.log
