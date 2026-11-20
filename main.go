@@ -15,9 +15,10 @@ import (
 
 /*
 
-Achievements
-- Reached word goal for the day
-- Reached new record in words written
+Improvements tbd:
+- if the file is no longer in the folder but it is in the state, delete it from the state
+- my process is to name the file after the date, then add the title to it,
+  meaning as the code is now those file states will build up
 
 */
 
@@ -44,7 +45,12 @@ func (cfg config) validate() error {
 
 func (cfg config) omit(fn string) bool {
 	for _, ofn := range cfg.omitFiles {
+		// Configured omissions.
 		if ofn == fn {
+			return true
+		}
+		// This is a typora thing.
+		if strings.HasSuffix(fn, "~.md") {
 			return true
 		}
 	}
@@ -57,7 +63,7 @@ func main() {
 	// Edit these before installing the app.
 	var cfg = config{
 		watchFolder: "/Users/krista/Library/Mobile Documents/com~apple~CloudDocs/Documents/notes/misc/writing/stories",
-		goalWords:   1000,
+		goalWords:   3333,
 		omitFiles:   []string{"think.md"},
 	}
 
@@ -152,7 +158,11 @@ func checkFiles(
 	}
 
 	var wordsToday int
-	for _, fs := range s.Files {
+	for fn, fs := range s.Files {
+		// Ignore any omitted files if they made it into the state.
+		if cfg.omit(fn) {
+			continue
+		}
 
 		// Total up new words for today.
 		// These are net amounts. Disallow lowering the total.
