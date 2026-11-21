@@ -13,15 +13,6 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
-/*
-
-Improvements tbd:
-- if the file is no longer in the folder but it is in the state, delete it from the state
-- my process is to name the file after the date, then add the title to it,
-  meaning as the code is now those file states will build up
-
-*/
-
 var (
 	stateFile     = "state.json"
 	dayDateFormat = "2006-01-02"
