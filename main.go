@@ -278,10 +278,16 @@ func updateState(
 		var fs fileState
 		var ok bool
 		if fs, ok = s.Files[entry.Name()]; !ok {
-			fs = fileState{
-				Words:         wc,
-				WordsDayStart: wc,
-				LastSavedOn:   n.Format(dayDateFormat),
+
+			// If this the finalized version of a story that was in progress
+			// ex: : 🚩26.11.18-new-friends.md and 26.11.18-new-friends.md
+			// get teat state and carry it over.
+			if fs, ok = s.Files["🚩"+entry.Name()]; !ok {
+				fs = fileState{
+					Words:         wc,
+					WordsDayStart: wc,
+					LastSavedOn:   n.Format(dayDateFormat),
+				}
 			}
 		}
 
