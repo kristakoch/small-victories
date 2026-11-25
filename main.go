@@ -130,6 +130,12 @@ type state struct {
 	Files            map[string]fileState `json:"files"`            // state of all files in the folder
 	Record           int                  `json:"record"`           // all time record
 	RecordSetOn      string               `json:"recordSetOn"`      // record date
+	WordsPerDay      map[string]int       `json:"wordsPerDay"`      // all recorded words per day, will need a display func to generate ordered version
+}
+
+type dayRecord struct {
+	Date  string `json:"date"`
+	Words int    `json:"words"`
 }
 
 type fileState struct {
@@ -150,8 +156,14 @@ func checkFiles(
 
 	var wordsToday int
 	for fn, fs := range s.Files {
+
 		// Ignore any omitted files if they made it into the state.
 		if cfg.omit(fn) {
+			continue
+		}
+
+		// If the record wasn't saved today, don't count it.
+		if !isToday(fs.LastSavedOn) {
 			continue
 		}
 
@@ -227,6 +239,7 @@ func getState(
 
 	s = state{
 		Files:            make(map[string]fileState),
+		WordsPerDay:      make(map[string]int),
 		LastCelebratedOn: "",
 		CelebratedOn:     make([]string, 0),
 	}
@@ -281,7 +294,7 @@ func updateState(
 
 			// If this the finalized version of a story that was in progress
 			// ex: : 🚩26.11.18-new-friends.md and 26.11.18-new-friends.md
-			// get teat state and carry it over.
+			// get the state and carry it over.
 			if fs, ok = s.Files["🚩"+entry.Name()]; !ok {
 				fs = fileState{
 					Words:         wc,
@@ -299,11 +312,20 @@ func updateState(
 			fs.WordsDayStart = wc
 		}
 
-		// Update stored date.s
+		// Update stored date.
 		fs.LastSavedOn = n.Format(dayDateFormat)
 
 		// Save back to the file registry.
+		if nil == s.Files {
+			s.Files = make(map[string]fileState)
+		}
 		s.Files[entry.Name()] = fs
+
+		// Update daily record.
+		if nil == s.WordsPerDay {
+			s.WordsPerDay = make(map[string]int)
+		}
+		s.WordsPerDay[fs.LastSavedOn] = wc
 
 		// Close immediately inside the loop to avoid "too many open files" errors
 		file.Close()
