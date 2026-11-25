@@ -299,7 +299,7 @@ func updateState(
 			fs.WordsDayStart = wc
 		}
 
-		// Update stored date.
+		// Update stored date.s
 		fs.LastSavedOn = n.Format(dayDateFormat)
 
 		// Save back to the file registry.
@@ -330,7 +330,7 @@ func celebrateGoal(
 ) error {
 	var err error
 
-	script := fmt.Sprintf(`display notification "Great job writing %d words today 🤘"  with title "NEW ACHIEVEMENT" sound name "Glass"`, goal)
+	script := fmt.Sprintf(`display notification "Great job writing %d words 🤘"  with title "NEW ACHIEVEMENT" sound name "Glass"`, goal)
 
 	cmd := exec.Command("osascript", "-e", script)
 
@@ -346,7 +346,7 @@ func celebrateRecord(
 ) error {
 	var err error
 
-	script := fmt.Sprintf(`display notification "You set a new record of %d words today 🍾"  with title "NEW ACHIEVEMENT" sound name "Glass"`, newRecord)
+	script := fmt.Sprintf(`display notification "You set a new record of %d words 🍾"  with title "NEW ACHIEVEMENT" sound name "Glass"`, newRecord)
 
 	cmd := exec.Command("osascript", "-e", script)
 
